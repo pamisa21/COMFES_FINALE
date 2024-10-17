@@ -1,7 +1,10 @@
-from flask import render_template, session, request, redirect, url_for
-from server import app
+from flask import render_template, session, request, redirect, url_for, flash
+from server import app,db
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from server import Users  # Make sure to import the Users model
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 # Load model and tokenizer
 model_path = "./model/twitter_xlm_roberta_fine_tuned_sentiment"
@@ -35,25 +38,70 @@ def main():
 def main_page():
     return render_template('main.html')
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        if username:
-            session['username'] = username
-            return redirect(url_for("loading_screen", target=url_for("dashboard")))
+        email = request.form['username']  # Email is used as the username
+        password = request.form['password']
+        
+        # Check if the user exists in the database
+        user = Users.query.filter_by(email=email).first()
+        if user:
+            # Check if the password matches
+            if user.password == password:  # Direct comparison
+                session['username'] = user.name  # Store username in session
+                return redirect(url_for("loading_screen", target=url_for("dashboard")))
+            else:
+                flash("Invalid password!", "error")  # Password is incorrect
         else:
-            return "Username is required"
+            flash("Email not found!", "error")  # Email is not registered
+
+        return redirect(url_for("login"))  # Redirect back to login
+
     return render_template('Auth/login.html')
+
 
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('loading_screen', target=url_for('login')))
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    return redirect(url_for('loading_screen', target=url_for("register_page")))
+    if request.method == 'POST':
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
+        confpassword = request.form['confpassword']
+        
+        # Check if passwords match
+        if password != confpassword:  
+            flash("Passwords do not match!", "error")
+            return redirect(url_for('register_page'))
+
+        # Check if the user already exists
+        existing_user = Users.query.filter_by(email=email).first()
+        if existing_user:
+            flash("Email address already exists!", "error")
+            return redirect(url_for('register_page'))
+
+        # Create a new user without hashing the password
+        new_user = Users(name=username, email=email, password=password)
+        
+        # Add and commit to the database
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("Registration successful! Please log in.", "success")
+        return redirect(url_for('login'))
+
+    return render_template('Auth/register.html')
+
+
+
+
+
 
 @app.route('/register_page')
 def register_page():
