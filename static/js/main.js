@@ -151,3 +151,30 @@ function toggleMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     mobileMenu.classList.toggle('hidden');
   }
+
+  //searching
+
+  function filterTable() {
+    const searchInput = document.getElementById('searchUsers').value.toLowerCase();
+    const filterCollege = document.getElementById('filterCollege').value.toLowerCase();
+    const tableBody = document.getElementById('accountsTableBody');
+    const rows = tableBody.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const nameCell = rows[i].getElementsByTagName('td')[0]; // Assuming name & email is the first cell
+        const collegeCell = rows[i].getElementsByTagName('td')[1]; // Assuming college is the second cell
+        let nameText = nameCell.textContent || nameCell.innerText;
+        let collegeText = collegeCell.textContent || collegeCell.innerText;
+
+        // Check for search input
+        const nameMatch = nameText.toLowerCase().includes(searchInput);
+        const collegeMatch = filterCollege === "" || collegeText.toLowerCase() === filterCollege;
+
+        if (nameMatch && collegeMatch) {
+            rows[i].style.display = "";
+        } else {
+            rows[i].style.display = "none";
+        }
+    }
+}
+

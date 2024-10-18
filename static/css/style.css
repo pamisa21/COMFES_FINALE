@@ -469,12 +469,12 @@ main {
     /*Analys Section */
 
 
-    .start{
+    .start:hover{
         background-color:var(--green6);
         color: white;
         border-radius: 5px;
     }
-    .start:hover{
+    .start{
         color: var(--green6);
         background-color: var(--maze);
         font-weight:600;

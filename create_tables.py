@@ -1,4 +1,3 @@
-# create_tables.py
 from server import db, app  # Import db and app from your Flask application
 
 # Create a database and tables

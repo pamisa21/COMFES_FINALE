@@ -1,11 +1,10 @@
-from flask_sqlalchemy import SQLAlchemy
+# model.py
 from datetime import datetime
-
-# Initialize SQLAlchemy
-db = SQLAlchemy()
+from extensions import db  # Import the db instance from extensions
 
 # Create Model
 class Users(db.Model):
+    __tablename__ = 'users'  # Specify the table name
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
@@ -17,5 +16,5 @@ class Users(db.Model):
         self.email = email
         self.password = password
 
-    def __repr__(self):
+    def __repr__(self):  
         return '<Name %r>' % self.name

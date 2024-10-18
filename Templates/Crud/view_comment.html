@@ -1,0 +1,28 @@
+{% extends "layout/base.html" %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/variable.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock css %}
+
+{% block content %}
+<div class="bg-bg text-gs-10 border border-border p-8 rounded-lg max-w-lg mx-auto mt-12 shadow-lg">
+    <div class="register text-center">
+        <h2 class="text-3xl">View Comment Details</h2>
+    </div>
+
+    <div class="mt-6">
+        <p><strong>Comment:</strong> {{ comment.content }}</p>  <!-- Access 'comment.content' -->
+        <p><strong>Faculty:</strong> {{ faculty_name }}</p>     <!-- Use 'faculty_name' passed from the view -->
+        <p><strong>Date Added:</strong> {{ comment.date_added.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    </div>
+
+    <div class="text-right mt-4">
+        <a href="{{ url_for('analys') }}" class="font-semibold text-green-600 hover:underline">Back to Comments List</a>
+    </div>
+</div>
+{% endblock content %}
+
+{% block script %}
+<!-- Add any custom scripts for this page here -->
+{% endblock script %}

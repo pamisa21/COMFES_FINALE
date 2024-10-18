@@ -41,7 +41,10 @@
                     <i class="ph ph-user w-5 h-5"></i>
                     <span class="mx-2 text-sm font-medium">Account</span> 
                 </a>
-                                
+                <a class="flex items-center px-3 py-2 custom-hover {% if request.path == url_for('faculty') %}active-link{% endif %}" href="{{ url_for('faculty') }}">
+                    <i class="ph ph-user w-5 h-5"></i>
+                    <span class="mx-2 text-sm font-medium">Faculty</span> 
+                </a>      
 
 
             </nav>

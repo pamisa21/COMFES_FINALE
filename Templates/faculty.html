@@ -21,10 +21,10 @@
         <div id="Accounts">
             <div class="flex flex-col mb-4 gap-4">
                 <div class="flex items-center justify-between">
-                    <h1 class="text-2xl font-bold">Users Account</h1>
-                    <a >
+                    <h1 class="text-2xl font-bold">Faculty Account</h1>
+                    <a href="{{ url_for('add_faculty') }}">
                         <button class="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded flex items-center gap-2">
-                            Add User
+                            Add Faculty
                         </button>
                     </a>
                     
@@ -71,34 +71,39 @@
                                 <thead class="table-header">
                                     <tr>
                                        
-                                        <th class="table-cell">Complete Name </th>
-
-                                        <th class="table-cell">Email</th>
+                                        <th class="table-cell">Complete Name & Email</th>
                                         
+                                        <th class="table-cell">College</th>
+                                        <th class="table-cell">Department</th>
+                                        <th class="table-cell">Status</th>
                                         <th class="table-cell">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="table-body" id="accountsTableBody">
-                                    {% for users in user_members %}
+                                    {% for member in faculty_members %}
                                     <tr>
                                         <td class="table-cell">
-                                            {{ users.name }}                                       
+                                            {{ member.name }}<br>
+                                            <span class="email">{{ member.email }}</span>
                                         </td>
-                                        
-                                        <td class="table-cell">{{ users.email }}</td>
-                                    
-                
-                                        <td class="table-cell">
+                                        <td class="table-cell">{{ member.college }}</td>
+                                        <td class="table-cell">{{ member.department }}</td>
+                                        <td class="table-cell status">
+                                            <div class="{% if member.status %}status-active{% else %}status-inactive{% endif %}">
+                                                {% if member.status %}Active{% else %}Inactive{% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm whitespace-nowrap">
                                             <div class="flex space-x-2">
-                                                <a href="{{ url_for('view_user', user_id=users.id) }}" title="view" class="text-yellow-500 hover:text-yellow-700">View</a>
-                                                <a href="#" title="Update" class="text-blue-500 hover:text-yellow-700">Update</a>
-                    
-                                                <form action="{{ url_for('delete_user', user_id=users.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this Users account?');">
+                                                <a href="{{ url_for('view_faculty', id=member.id) }}" title="View" class="text-blue-500 hover:text-blue-700">View</a>
+
+                                                <a href="#" title="Update" class="text-yellow-500 hover:text-yellow-700">Update</a>
+
+                                                <form action="{{ url_for('delete_faculty', id=member.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this faculty member?');">
                                                     <a href="#" title="Delete" class="text-red-500 hover:text-red-700" onclick="this.closest('form').submit(); return false;">Delete</a>
                                                 </form>
                                             </div>
                                         </td>
-                                        
                                     </tr>
                                     {% endfor %}
                                 </tbody>

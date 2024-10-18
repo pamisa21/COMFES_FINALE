@@ -2,7 +2,7 @@ from flask import render_template, session, request, redirect, url_for, flash
 from server import app,db
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from server import Users  # Make sure to import the Users model
+from server import Users,Faculty,Comment  # Make sure to import the Users model
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -163,13 +163,6 @@ def comments():
 def loading_users_account():
     return redirect(url_for("loading_screen", target=url_for("account")))
 
-@app.route('/users_account')
-def account():
-    if 'username' in session:
-        username = session['username']
-        return render_template('users_account.html', username=username)
-    return redirect(url_for('loading_screen', target=url_for('login')))
-
 
 # Routes for profile with loading screen
 @app.route('/loading_profile')
@@ -205,9 +198,197 @@ def FQS():
     return redirect(url_for('loading_screen', target=url_for('FQS')))
 
 
-@app.route('/analys')
+@app.route('/analys', methods=['GET'])
 def analys():
-    if 'username'  in session:
+    if 'username' in session:
         username = session['username']
-        return render_template('analys.html', username=username )
+        search_query = request.args.get('search', '')
+
+        if search_query:
+            comments = db.session.query(Comment, Faculty).join(Faculty, Comment.faculty_id == Faculty.id)\
+                .filter(
+                    (Faculty.name.ilike(f'%{search_query}%')) | 
+                    (Comment.content.ilike(f'%{search_query}%'))
+                ).all()  # Search by faculty name or comment content
+        else:
+            comments = db.session.query(Comment, Faculty).join(Faculty, Comment.faculty_id == Faculty.id).all()  # Get all comments
+
+        return render_template('analys.html', username=username, comments=comments)
+
     return redirect(url_for('loading_screen', target=url_for('analys')))
+
+
+
+
+@app.route('/users_account', methods=['GET'])
+def account():
+    if 'username' in session:
+        username = session['username']
+        search_query = request.args.get('search', '')  
+        if search_query:
+                user_members = Users.query.filter(
+                    (Users.name.ilike(f'%{search_query}%')) | 
+                    (Users.email.ilike(f'%{search_query}%'))
+                ).all()     
+        else:
+                user_members = Users.query.all()  # Get all faculty members if no search query
+
+        return render_template('users_account.html', username=username, user_members=user_members)
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+
+
+
+@app.route('/faculty', methods=['GET'])
+def faculty():
+    if 'username' in session:
+        username = session['username']
+        search_query = request.args.get('search', '')  # Get the search query from the URL
+
+        # Fetch faculty members based on the search query
+        if search_query:
+            faculty_members = Faculty.query.filter(
+                (Faculty.name.ilike(f'%{search_query}%')) | 
+                (Faculty.email.ilike(f'%{search_query}%'))
+            ).all()
+        else:
+            faculty_members = Faculty.query.all()  # Get all faculty members if no search query
+
+        return render_template('faculty.html', username=username, faculty_members=faculty_members)
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+
+# Crud Faculty 
+
+@app.route('/faculty/add', methods=['GET', 'POST'])
+def add_faculty():
+    if 'username' in session:
+        username = session['username']
+        
+        if request.method == 'POST':
+            name = request.form['name']
+            department = request.form['department']
+            college = request.form['college']
+            gender = request.form['gender']
+            birthdate = request.form['birthdate']  # Optional, can be None
+            email = request.form['email']
+            password = request.form['password']
+            confpassword = request.form['confpassword']
+            
+            # Check if passwords match
+            if password != confpassword:
+                flash('Passwords do not match!', 'error')
+                return redirect(url_for('add_faculty'))
+
+            # Create a new Faculty instance
+            new_faculty = Faculty(
+                name=name, 
+                department=department, 
+                college=college, 
+                gender=gender, 
+                birthdate=birthdate,  # This can be None if not provided
+                email=email, 
+                password=password
+            )
+            
+            # Add the new faculty member to the database
+            db.session.add(new_faculty)
+            db.session.commit()
+            
+            return redirect(url_for('faculty'))  # Redirect to the faculty page after adding
+        
+        return render_template('Crud/add_faculty.html', username=username)  
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+@app.route('/faculty/view/<int:id>', methods=['GET'])
+def view_faculty(id):
+    if 'username' in session:
+        username = session['username']
+        
+        # Fetch the faculty member from the database
+        faculty_member = Faculty.query.get(id)
+        
+        if faculty_member is None:
+            flash('Faculty member not found!', 'error')
+            return redirect(url_for('faculty'))
+
+        return render_template('Crud/view_faculty.html', username=username, faculty=faculty_member)
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+
+# delete Faculty 
+
+@app.route('/faculty/delete/<int:id>', methods=['POST'])
+def delete_faculty(id):
+    if 'username' in session:
+        faculty_member = Faculty.query.get(id)  # Get the faculty member by ID
+        if faculty_member:
+            db.session.delete(faculty_member)  # Delete the faculty member
+            db.session.commit()  # Commit the changes
+            flash('Faculty member deleted successfully.', 'success')  # Flash a success message
+        else:
+            flash('Faculty member not found.', 'error')  # Flash an error message if not found
+        return redirect(url_for('faculty'))  # Redirect to the faculty page
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+
+
+# view users 
+
+
+@app.route('/view_user/<int:user_id>', methods=['GET'])
+def view_user(user_id):
+    if 'username' in session:
+        user = Users.query.get(user_id)  # Get user by ID
+        
+        if user:
+            return render_template('Crud/view_user.html', user=user)
+        
+        return "User not found", 404  # Handle case where user doesn't exist
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+
+# Delete Users account 
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    if 'username' in session:
+        user = Users.query.get(user_id)  # Get the user by ID
+        
+        if user:
+            db.session.delete(user)  # Delete the user
+            db.session.commit()  # Commit the changes
+            flash('User deleted successfully!', 'success')
+        else:
+            flash('User not found.', 'error')
+        
+        return redirect(url_for('account'))
+
+    return redirect(url_for('loading_screen', target=url_for('login')))
+
+
+# view Comments Details 
+@app.route('/view_comment/<int:comment_id>', methods=['GET'])
+def view_comment(comment_id):
+    if 'username' in session:
+        # Perform an inner join between Comment and Faculty
+        comment_instance = (
+            db.session.query(Comment, Faculty.name)
+            .join(Faculty, Comment.faculty_id == Faculty.id)
+            .filter(Comment.comment_id == comment_id)
+            .first()
+        )
+
+        if comment_instance:
+            comment, faculty_name = comment_instance
+            return render_template('Crud/view_comment.html', comment=comment, faculty_name=faculty_name)
+
+        return "Comment not found", 404  # Handle case where the comment doesn't exist
+
+    return redirect(url_for('loading_screen', target=url_for('login')))

@@ -14,11 +14,11 @@ try:
     my_cursor.execute("SHOW DATABASES")
     databases = [db[0] for db in my_cursor]
 
-    if "our_users" not in databases:
-        my_cursor.execute("CREATE DATABASE our_users")
-        print("Database 'our_users' created successfully.")
+    if "ComFES" not in databases:
+        my_cursor.execute("CREATE DATABASE ComFES")
+        print("Database 'ComFES' created successfully.")
     else:
-        print("Database 'our_users' already exists.")
+        print("Database 'ComFES' already exists.")
         
         # Optionally, display the existing databases
         print("Current databases:")
